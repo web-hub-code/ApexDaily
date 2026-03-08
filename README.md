@@ -1,160 +1,184 @@
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PakGold | Prime Solutions Official</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <title>PakGold | Prime Solutions Node</title>
     <style>
-        :root { --gold: #fbbf24; --bg: #020617; --glass: rgba(255, 255, 255, 0.03); --green: #10b981; --red: #ef4444; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
-        body { background: var(--bg); color: white; min-height: 100vh; overflow-x: hidden; }
-        
-        /* 🛡️ SCREEN SYSTEM (FIXED) */
-        .page { display: none; width: 100%; min-height: 100vh; padding-bottom: 90px; }
-        .page.active { display: block !important; }
-
-        .glass-card { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 20px; width: 92%; max-width: 450px; margin: 15px auto; }
-        .btn-main { width: 100%; padding: 15px; background: var(--gold); border: none; border-radius: 14px; color: #000; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
-        input { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: white; margin-bottom: 12px; outline: none; }
-        
-        .machine-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px; }
-        .machine-card { background: rgba(255,255,255,0.02); border-left: 4px solid var(--gold); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
-        .premium { border-left-color: var(--green); background: rgba(16, 185, 129, 0.05); }
-
-        nav { position: fixed; bottom: 0; width: 100%; background: #0f172a; display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
-        nav div { font-size: 0.65rem; color: #94a3b8; cursor: pointer; text-align: center; }
-        nav div.active { color: var(--gold); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        :root { --bg: #020617; --card: rgba(30, 41, 59, 0.5); --gold: #fbbf24; --border: rgba(251, 191, 36, 0.1); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: white; transition: 0.3s; padding-bottom: 100px; }
+        .glass { background: var(--card); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 24px; }
+        .page { display: none; animation: slideUp 0.4s ease forwards; }
+        .active-page { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-gold { background: linear-gradient(135deg, #b45309, #fbbf24); color: #000; font-weight: 800; border-radius: 16px; }
+        .machine-glow { box-shadow: 0 0 15px rgba(251, 191, 36, 0.1); border-left: 4px solid var(--gold); }
+        .premium-glow { border-left: 4px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.1); }
+        .animate-marquee { display: inline-block; animation: marquee 15s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="authPage" class="page active">
-        <h1 style="text-align:center; margin-top:60px; color:var(--gold); font-size: 3rem;">PakGold</h1>
-        <div class="glass-card">
-            <h2 style="font-size:1rem; margin-bottom:20px; text-align:center; opacity:0.8;">Secure Access</h2>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button id="authBtn" class="btn-main">Get Started 🚀</button>
-            <p id="toggleAuth" style="text-align:center; font-size:0.8rem; margin-top:20px; cursor:pointer; color:#94a3b8;">New? <span style="color:var(--gold)">Create Account</span></p>
+    <header class="p-4 flex justify-between items-center sticky top-0 bg-[#020617]/80 backdrop-blur-md border-b border-white/5 z-[5000]">
+        <div class="flex items-center gap-2">
+            <div onclick="adminTap()" class="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center font-black text-black italic">P</div>
+            <span class="font-black text-xs uppercase tracking-tighter">Pak<span class="text-yellow-500">Gold</span></span>
+        </div>
+        <div id="top-bal" class="text-[10px] font-black bg-yellow-500/10 text-yellow-500 px-4 py-1.5 rounded-full border border-yellow-500/20 italic">₨ 0.00</div>
+    </header>
+
+    <div class="p-4">
+        <div class="bg-yellow-500/5 border border-yellow-500/10 p-2 rounded-xl overflow-hidden whitespace-nowrap">
+            <p id="v-news" class="animate-marquee inline-block text-[8px] font-black uppercase text-yellow-500 italic">
+                Welcome to PakGold! Start Mining with only ₨ 200 | Prime Solutions Node Active... 😘
+            </p>
         </div>
     </div>
 
-    <div id="dashPage" class="page">
-        <div class="glass-card" style="border-color:var(--gold); margin-top:20px;">
-            <p style="font-size:0.6rem; color:#94a3b8; letter-spacing:1px;">TOTAL EARNINGS</p>
-            <h1 style="color:var(--gold); font-size:2.8rem;">PKR <span id="bal">0.00</span></h1>
-            <div style="width:100%; height:6px; background:rgba(255,255,255,0.05); border-radius:10px; margin-top:15px; overflow:hidden;">
-                <div id="miningBar" style="width:0%; height:100%; background:var(--gold); box-shadow: 0 0 15px var(--gold); transition:1s;"></div>
-            </div>
+    <section id="auth-ui" class="fixed inset-0 z-[20000] bg-[#020617] flex flex-col items-center justify-center p-8 text-center">
+        <h1 class="text-3xl font-black italic tracking-tighter mb-8 uppercase text-yellow-500">Initialize Node</h1>
+        <div class="w-full max-w-[320px] space-y-4">
+            <input type="text" id="user-name" placeholder="Username" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-center font-bold outline-none">
+            <input type="password" id="user-pass" placeholder="Password" class="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-center font-bold outline-none">
+            <button onclick="login()" class="w-full p-4 btn-gold uppercase text-[10px] tracking-widest shadow-xl">Authorize Access 🚀</button>
         </div>
+    </section>
 
-        <h3 style="margin:20px 0 10px 20px; font-size:0.9rem;">Mining Machines (15+5)</h3>
-        <div id="machineContainer" class="glass-card" style="max-height: 400px; overflow-y: auto;">
+    <main id="app-ui" class="hidden p-4 space-y-6">
+        
+        <div id="p-home" class="page active-page space-y-6">
+            <div class="p-8 rounded-[2.5rem] bg-gradient-to-br from-yellow-600 to-yellow-900 text-black shadow-2xl relative overflow-hidden">
+                <p class="text-[10px] font-black uppercase opacity-60 tracking-widest">Active Balance</p>
+                <h2 class="text-4xl font-black tracking-tighter mt-1" id="v-bal">₨ 0.00</h2>
+                <div class="mt-6 flex justify-between items-center bg-black/20 p-4 rounded-2xl backdrop-blur-md text-white">
+                    <span class="text-[8px] font-bold uppercase italic">Server: Online</span>
+                    <div class="w-24 h-1 bg-white/20 rounded-full overflow-hidden"><div class="bg-white h-full animate-pulse" style="width: 60%"></div></div>
+                </div>
             </div>
-    </div>
 
-    <div id="infoPage" class="page">
-        <div class="glass-card">
-            <h3 style="color:var(--gold); margin-bottom:10px;">About PakGold</h3>
-            <p style="font-size:0.75rem; color:#94a3b8; line-height:1.6;">PakGold is an official project by **Prime Solutions**, designed for automated digital mining.</p>
+            <div class="flex gap-2 p-1 bg-white/5 rounded-2xl">
+                <button onclick="renderPlans('normal')" id="btn-normal" class="flex-1 p-3 rounded-xl bg-yellow-500 text-black text-[9px] font-black uppercase">15 Standard Nodes</button>
+                <button onclick="renderPlans('special')" id="btn-special" class="flex-1 p-3 rounded-xl text-white text-[9px] font-black uppercase opacity-40">5 VIP Machines</button>
+            </div>
             
-            <h3 style="color:var(--gold); margin-top:25px; margin-bottom:10px;">Privacy Policy</h3>
-            <p style="font-size:0.75rem; color:#94a3b8; line-height:1.6;">All investments are secure. Withdrawals are processed within 24 hours to your linked account.</p>
-
-            <h3 style="color:var(--gold); margin-top:25px; margin-bottom:10px;">Contact Support</h3>
-            <p style="font-size:0.75rem; color:#94a3b8;">Email: webhub262@gmail.com<br>WhatsApp Support: Active 24/7</p>
+            <div id="plans-grid" class="grid grid-cols-1 gap-4"></div>
         </div>
-    </div>
 
-    <div id="walletPage" class="page">
-        <div class="glass-card">
-            <h3 style="color:var(--gold); margin-bottom:20px;">Deposit / Withdraw</h3>
-            <div style="background:rgba(255,255,255,0.02); padding:15px; border-radius:12px; font-size:0.75rem; margin-bottom:20px;">
-                <p><b>EasyPaisa:</b> 03379827882</p>
-                <p><b>JazzCash:</b> 03705519562</p>
+        <div id="p-wallet" class="page space-y-6">
+            <div class="glass p-6 space-y-4">
+                <h3 class="text-[10px] font-black uppercase text-yellow-500 tracking-widest">Payment Methods</h3>
+                <div class="space-y-2 text-[11px] font-bold">
+                    <div class="flex justify-between p-3 bg-white/5 rounded-xl border-l-2 border-green-500"><span>EasyPaisa</span><span>033379827882</span></div>
+                    <div class="flex justify-between p-3 bg-white/5 rounded-xl border-l-2 border-red-500"><span>JazzCash</span><span>03705519562</span></div>
+                </div>
+                <input type="number" id="dep-amt" placeholder="Amount (₨)" class="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none">
+                <input type="text" id="dep-tid" placeholder="Transaction ID" class="w-full p-4 bg-white/5 border border-white/10 rounded-xl outline-none">
+                <button onclick="submitDep()" class="w-full p-4 btn-gold uppercase text-[10px] tracking-widest">Submit Proof ⚡</button>
             </div>
-            <input type="number" id="payAmount" placeholder="Enter Amount">
-            <input type="text" id="payTid" placeholder="Transaction ID / Account">
-            <button class="btn-main">Submit Request</button>
         </div>
-    </div>
 
-    <nav id="navbar" style="display:none;">
-        <div onclick="switchPage('dashPage')">🏠<br>Home</div>
-        <div onclick="switchPage('walletPage')">💰<br>Wallet</div>
-        <div onclick="switchPage('infoPage')">📄<br>Company</div>
-        <div onclick="logout()">❌<br>Logout</div>
+        <div id="p-about" class="page space-y-6">
+            <div class="glass p-6 space-y-4 text-[11px] font-bold opacity-80 leading-relaxed">
+                <h3 class="text-yellow-500 uppercase">Prime Solutions Official</h3>
+                <p>PakGold is a secure cloud-mining infrastructure. We use high-end nodes to generate daily yields for our investors.</p>
+                <div class="h-[1px] bg-white/5"></div>
+                <h4 class="text-yellow-500 uppercase">Privacy Policy</h4>
+                <p>All data is encrypted via Firebase. Withdrawals are processed within 24 hours. Support: webhub262@gmail.com</p>
+            </div>
+        </div>
+    </main>
+
+    <nav id="bottom-nav" class="hidden fixed bottom-0 w-full glass border-t border-white/10 p-4 flex justify-around items-center rounded-t-[2.5rem] z-[4000]">
+        <button onclick="changePage('home')" id="n-home" class="flex flex-col items-center gap-1 text-yellow-500"><span class="text-lg">🏠</span><span class="text-[7px] font-black">NODE</span></button>
+        <button onclick="changePage('wallet')" id="n-wallet" class="flex flex-col items-center gap-1 opacity-40"><span class="text-lg">📥</span><span class="text-[7px] font-black">FUND</span></button>
+        <button onclick="changePage('about')" id="n-about" class="flex flex-col items-center gap-1 opacity-40"><span class="text-lg">🏢</span><span class="text-[7px] font-black">LEGAL</span></button>
+        <button onclick="logout()" class="flex flex-col items-center gap-1 opacity-40"><span class="text-lg">❌</span><span class="text-[7px] font-black">EXIT</span></button>
     </nav>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+    <script>
+        // --- 1. FIREBASE SETUP ---
+        const firebaseConfig = { apiKey: "AIzaSyDt3ChZHyDdtM4Ir1oXRZJUywcOiV30Wtg", authDomain: "investment-84f4e.firebaseapp.com", projectId: "investment-84f4e", storageBucket: "investment-84f4e.appspot.com", messagingSenderId: "975293889308", appId: "1:975293889308:web:6d034a99cc966c75ff58d9" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        let user = null;
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCMG6KG_oD8cjEk4YpbxXik-C5q8K5MDHk",
-            authDomain: "dark-web-9.firebaseapp.com",
-            projectId: "dark-web-9",
-            storageBucket: "dark-web-9.firebasestorage.app",
-            messagingSenderId: "564328425161",
-            appId: "1:564328425161:web:eb109ab77356dafe7f4f18"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const currentUser = localStorage.getItem('pakgold_user');
-
-        // 🛠️ AUTOMATIC MACHINE LIST GENERATION (15+5)
-        const machines = [
-            { id: "M-01", cost: 200, profit: 12 }, { id: "M-02", cost: 500, profit: 30 },
-            { id: "M-03", cost: 1000, profit: 65 }, { id: "M-04", cost: 2000, profit: 140 },
-            { id: "M-05", cost: 3500, profit: 250 }, { id: "M-06", cost: 5000, profit: 380 },
-            { id: "M-07", cost: 7000, profit: 550 }, { id: "M-08", cost: 9000, profit: 720 },
-            { id: "M-09", cost: 11000, profit: 900 }, { id: "M-10", cost: 13000, profit: 1100 },
-            { id: "M-11", cost: 15000, profit: 1300 }, { id: "M-12", cost: 17000, profit: 1550 },
-            { id: "M-13", cost: 20000, profit: 1900 }, { id: "M-14", cost: 23000, profit: 2200 },
-            { id: "M-15", cost: 25000, profit: 2500 },
-            // Premium Machines (5 Units)
-            { id: "P-01", cost: 40000, profit: 4500, type: 'premium' },
-            { id: "P-02", cost: 60000, profit: 7000, type: 'premium' },
-            { id: "P-03", cost: 80000, profit: 10000, type: 'premium' },
-            { id: "P-04", cost: 100000, profit: 13500, type: 'premium' },
-            { id: "P-15", cost: 150000, profit: 22000, type: 'premium' }
+        // --- 2. MODERN MACHINE DATA (15+5) ---
+        const STANDARD_NODES = [];
+        for(let i=1; i<=15; i++) {
+            let prc = 200 + (i-1)*1000;
+            let prf = (10 + (i*5)).toFixed(0);
+            STANDARD_NODES.push({ id: `S-NODE ${i}`, price: prc, profit: prf });
+        }
+        const VIP_NODES = [
+            { id: "GOLD VIP-1", price: 50000, profit: 4500 },
+            { id: "DIAMOND VIP-2", price: 100000, profit: 10000 },
+            { id: "PLATINUM VIP-3", price: 250000, profit: 28000 },
+            { id: "MASTER VIP-4", price: 500000, profit: 60000 },
+            { id: "ULTRA VIP-5", price: 1000000, profit: 150000 }
         ];
 
-        const container = document.getElementById('machineContainer');
-        machines.forEach(m => {
-            container.innerHTML += `
-                <div class="machine-card ${m.type === 'premium' ? 'premium' : ''}">
-                    <div><b>${m.id} Mining</b><br><small>Cost: PKR ${m.cost}</small></div>
-                    <div style="text-align:right;"><span style="color:var(--gold)">PKR ${m.profit}</span><br><small>Daily</small></div>
-                </div>`;
-        });
-
-        // 🔄 NAVIGATION LOGIC
-        window.switchPage = (id) => {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        };
-
-        if(currentUser) {
-            switchPage('dashPage');
-            document.getElementById('navbar').style.display = 'flex';
-            onSnapshot(doc(db, "users", currentUser), (s) => {
-                if(s.exists()) document.getElementById('bal').innerText = s.data().balance.toFixed(2);
-            });
-            let p = 0; setInterval(() => { p = p >= 100 ? 0 : p + 5; document.getElementById('miningBar').style.width = p + "%"; }, 1500);
+        // --- 3. CORE FUNCTIONS ---
+        async function login() {
+            const n = document.getElementById('user-name').value.trim().toLowerCase();
+            const p = document.getElementById('user-pass').value.trim();
+            if(!n || !p) return alert("Credentials required! 😘");
+            const ref = db.collection("users").doc(n);
+            const d = await ref.get();
+            if(!d.exists) { await ref.set({ name: n, password: p, balance: 0, time: Date.now() }); }
+            else if(d.data().password !== p) return alert("Wrong pass! 😘");
+            localStorage.setItem('pakgold_user', n);
+            location.reload();
         }
 
-        // 🔐 LOGIN/SIGNUP LOGIC
-        document.getElementById('authBtn').onclick = async () => {
-            const u = document.getElementById('username').value.toLowerCase().trim();
-            const p = document.getElementById('password').value;
-            if(!u || !p) return alert("Fill all details");
-            const ref = doc(db, "users", u);
-            const snap = await getDoc(ref);
-            if(snap.exists() && snap.data().pass === p) { localStorage.setItem('pakgold_user', u); location.reload(); }
-            else if(!snap.exists()) { await setDoc(ref, { user: u, pass: p, balance: 0 }); localStorage.setItem('pakgold_user', u); location.reload(); }
-            else { alert("Failed"); }
+        function sync(n) {
+            db.collection("users").doc(n).onSnapshot(d => {
+                user = d.data();
+                const b = (user.balance || 0).toLocaleString();
+                document.getElementById('v-bal').innerText = "₨ " + b;
+                document.getElementById('top-bal').innerText = "₨ " + b;
+            });
+        }
+
+        function renderPlans(cat) {
+            const grid = document.getElementById('plans-grid');
+            const data = cat === 'normal' ? STANDARD_NODES : VIP_NODES;
+            grid.innerHTML = '';
+            data.forEach(p => {
+                grid.innerHTML += `
+                <div class="glass p-5 flex justify-between items-center ${cat==='special'?'premium-glow':'machine-glow'}">
+                    <div>
+                        <p class="text-[9px] font-black uppercase text-yellow-500">${p.id}</p>
+                        <h3 class="text-lg font-black tracking-tighter">₨ ${p.price.toLocaleString()}</h3>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-green-500">+ ₨ ${p.profit}</p>
+                        <button onclick="buyNode('${p.id}', ${p.price})" class="mt-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-lg text-[8px] font-black uppercase">Activate</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function changePage(p) {
+            document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('active-page'));
+            document.getElementById('p-'+p).classList.add('active-page');
+            document.querySelectorAll('nav button').forEach(b=>b.classList.add('opacity-40'));
+            document.getElementById('n-'+p).classList.remove('opacity-40');
+        }
+
+        window.onload = () => {
+            const saved = localStorage.getItem('pakgold_user');
+            if(saved) {
+                document.getElementById('auth-ui').classList.add('hidden');
+                document.getElementById('app-ui').classList.remove('hidden');
+                document.getElementById('bottom-nav').classList.remove('hidden');
+                sync(saved);
+                renderPlans('normal');
+            }
         };
 
         window.logout = () => { localStorage.removeItem('pakgold_user'); location.reload(); }
